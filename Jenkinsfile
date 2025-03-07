@@ -2,7 +2,15 @@ pipeline {
     agent any
     triggers {
             //this will trigger this jenkins job when the merger happens
-            githubPush branch: 'master'
+            // githubPush branch: 'master'
+            githubPullRequest(
+                        adminlist: 'your-github-username',
+                        cron: 'H/5 * * * *',
+                        triggerPhrase: 'Jenkins, build this please',
+                        onlyTriggerPhrase: false,
+                        skipBuildPhrase: 'Jenkins, skip this build',
+                        whitelistTargetBranches: true,
+                        targetBranches: 'master')
         }
     environment { 
         DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
