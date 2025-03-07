@@ -1,6 +1,10 @@
 pipeline {
     agent any
-
+    triggers {
+            //this will trigger this jenkins job when the merger happens
+            githubPush()
+            
+        }
     environment { 
         DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
         DOCKER_IMAGE = "faizan262/mlops_assignment1:latest"
@@ -37,20 +41,10 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
-                    
-                    def containerExist = bat(script: 'docker ps -aq -f name=flask-app', returnStdout: true).trim()
-
-                    if (containerExist) {
-                        
-                        bat '''
-                            docker stop flask-app || exit /b 0
-                            docker rm flask-app || exit /b 0
-                        '''
-                    }
-
-                
                     bat '''
-                        docker run -d -p 5003:5003 --name flask-app %DOCKER_IMAGE%
+                    docker stop flask-app || exit /b 0
+                    docker rm flask-app || exit /b 0
+                    docker run -d -p 5000:5000 --name flask-app %DOCKER_IMAGE%
                     '''
                 }
             }
@@ -62,7 +56,7 @@ pipeline {
             emailext (
                 subject: 'Successful Deployment',
                 body: '''
-                    Flask app has been successfully deployed using Jenkins!
+                    Flask ML app has been successfully deployed via Jenkins!
 
                     Image: ${DOCKER_IMAGE}
                     Container Name: flask-app
