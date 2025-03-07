@@ -1,6 +1,9 @@
 pipeline {
     agent any
-
+    triggers {
+            //this will trigger this jenkins job when the merger happens
+            githubPush branch: 'master'
+        }
     environment { 
         DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
         DOCKER_IMAGE = "faizan262/mlops_assignment1:latest"
