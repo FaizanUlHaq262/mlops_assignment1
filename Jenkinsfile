@@ -6,11 +6,7 @@ pipeline {
         DOCKER_IMAGE = "faizan262/mlops_assignment1:latest"
     }
 
-    stages { // The stages execute the taskes in the following order
-             // 1. Clone the repo
-             // 2. Build and Test
-             // 3. Docker Build and Push to Hub
-             // 4. Deploying the container
+    stages {
         stage('Clone Repository') {
             steps {
                 git branch: 'master', url: 'https://github.com/FaizanUlHaq262/mlops_assignment1.git'
@@ -20,7 +16,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DOCKER_IMAGE} .'
+                    bat "docker build -t %DOCKER_IMAGE% ."
                 }
             }
         }
@@ -29,24 +25,23 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh '''
-                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                            docker push ${DOCKER_IMAGE}
+                        bat '''
+                            echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                            docker push %DOCKER_IMAGE%
                         '''
+                    }
                 }
             }
         }
-    }
 
         stage('Deploy Container') {
             steps {
                 script {
-                    sh """
-                    # Remove existing container if it exists
-                    docker stop flask-app || true && docker rm flask-app || true
-                    # Run new container
-                    docker run -d -p 5000:5000 --name flask-app ${DOCKER_IMAGE}
-                    """
+                    bat '''
+                    docker stop flask-app || exit /b 0
+                    docker rm flask-app || exit /b 0
+                    docker run -d -p 5000:5000 --name flask-app %DOCKER_IMAGE%
+                    '''
                 }
             }
         }
@@ -55,7 +50,7 @@ pipeline {
     post {
         success {
             emailext (
-                subject: 'Succesful Deployment',
+                subject: 'Successful Deployment',
                 body: '''
                     Flask ML app has been successfully deployed via Jenkins!
 
@@ -67,7 +62,7 @@ pipeline {
         }
         failure {
             emailext (
-                subject: 'Failed Deploymnet',
+                subject: 'Failed Deployment',
                 body: 'Check Jenkins logs for more details due to failure of email being not sent',
                 to: 'faizan.official262@gmai.com'
             )
