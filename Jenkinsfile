@@ -2,7 +2,7 @@ pipeline {
     agent any
     triggers {
             //this will trigger this jenkins job when the merger happens
-            githubPush branch: 'master'
+            githubPush()
             
         }
     environment { 
