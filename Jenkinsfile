@@ -1,10 +1,6 @@
 pipeline {
     agent any
-    triggers {
-            //this will trigger this jenkins job when the merger happens
-            githubPush()
-            
-        }
+
     environment { 
         DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
         DOCKER_IMAGE = "faizan262/mlops_assignment1:latest"
@@ -41,10 +37,20 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
+                    // First, check if the container is running. If it is, stop and remove it.
+                    def containerExist = bat(script: 'docker ps -aq -f name=flask-app', returnStdout: true).trim()
+
+                    if (containerExist) {
+                        // Stop and remove the container only if it exists
+                        bat '''
+                            docker stop flask-app || exit /b 0
+                            docker rm flask-app || exit /b 0
+                        '''
+                    }
+
+                    // Run the new container
                     bat '''
-                    docker stop flask-app || exit /b 0
-                    docker rm flask-app || exit /b 0
-                    docker run -d -p 5000:5000 --name flask-app %DOCKER_IMAGE%
+                        docker run -d -p 5003:5003 --name flask-app %DOCKER_IMAGE%
                     '''
                 }
             }
